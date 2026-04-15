@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Menu, X, Search } from 'lucide-react';
+import { Menu, X, Search, TrendingUp } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 interface HeaderProps {
   selectedSport: string;
@@ -71,8 +72,15 @@ export default function Header({ selectedSport, onSportChange, onSearch }: Heade
             {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
           </button>
 
-          {/* Desktop Login/Signup (optional) */}
+          {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-4">
+            <Link
+              to="/betting"
+              className="flex items-center gap-2 text-gray-300 hover:text-orange-400 transition font-medium"
+            >
+              <TrendingUp className="h-4 w-4" />
+              Betting
+            </Link>
             <button className="text-gray-300 hover:text-white transition">Login</button>
             <button className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg transition">
               Sign Up
@@ -141,6 +149,14 @@ export default function Header({ selectedSport, onSportChange, onSearch }: Heade
 
           {/* Mobile Auth Buttons */}
           <div className="border-t border-gray-700 p-4 space-y-2">
+            <Link
+              to="/betting"
+              onClick={() => setIsMenuOpen(false)}
+              className="flex items-center justify-center gap-2 w-full text-gray-300 hover:text-orange-400 py-2 transition font-medium"
+            >
+              <TrendingUp className="h-4 w-4" />
+              Betting Dashboard
+            </Link>
             <button className="w-full text-gray-300 hover:text-white py-2 transition">Login</button>
             <button className="w-full bg-orange-500 hover:bg-orange-600 text-white py-2 rounded-lg transition">
               Sign Up

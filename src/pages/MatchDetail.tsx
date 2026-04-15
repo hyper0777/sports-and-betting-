@@ -2,6 +2,7 @@ import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft, PlayCircle, Radio, ShieldCheck, TrendingUp } from 'lucide-react';
 import { liveMatches } from '@/data/sportsData';
 import { useScoreSimulator } from '@/components/sports/useScoreSimulator';
+import QuickBet from '@/components/betting/QuickBet';
 
 export default function MatchDetail() {
   const { matchId } = useParams();
@@ -85,28 +86,39 @@ export default function MatchDetail() {
             </div>
           </div>
 
-          <div className="bg-gray-900 rounded-xl border border-gray-800 p-5">
-            <h2 className="text-lg font-semibold mb-4">Streaming sources</h2>
-            <div className="space-y-3">
-              {match.streamSources?.map((source) => (
-                <a
-                  key={source.id}
-                  href={source.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="block rounded-lg border border-gray-700 bg-gray-800 p-3 hover:border-orange-500 transition"
-                >
-                  <div className="flex items-center justify-between">
-                    <p className="font-semibold">{source.label}</p>
-                    <span className="text-xs px-2 py-1 rounded-full bg-orange-500/20 text-orange-300">{source.quality}</span>
-                  </div>
-                  <div className="mt-2 text-xs text-gray-400 flex items-center gap-3">
-                    <span className="inline-flex items-center gap-1"><Radio className="h-3 w-3" /> {source.latency}</span>
-                    <span>{source.language}</span>
-                    {source.isOfficial && <span className="inline-flex items-center gap-1 text-emerald-400"><ShieldCheck className="h-3 w-3" /> Official</span>}
-                  </div>
-                </a>
-              ))}
+          <div className="space-y-6">
+            {match.odds && (
+              <QuickBet
+                matchId={match.id}
+                matchName={`${match.homeTeam} vs ${match.awayTeam}`}
+                odds={match.odds}
+                teamNames={{ home: match.homeTeam, away: match.awayTeam }}
+              />
+            )}
+
+            <div className="bg-gray-900 rounded-xl border border-gray-800 p-5">
+              <h2 className="text-lg font-semibold mb-4">Streaming sources</h2>
+              <div className="space-y-3">
+                {match.streamSources?.map((source) => (
+                  <a
+                    key={source.id}
+                    href={source.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="block rounded-lg border border-gray-700 bg-gray-800 p-3 hover:border-orange-500 transition"
+                  >
+                    <div className="flex items-center justify-between">
+                      <p className="font-semibold">{source.label}</p>
+                      <span className="text-xs px-2 py-1 rounded-full bg-orange-500/20 text-orange-300">{source.quality}</span>
+                    </div>
+                    <div className="mt-2 text-xs text-gray-400 flex items-center gap-3">
+                      <span className="inline-flex items-center gap-1"><Radio className="h-3 w-3" /> {source.latency}</span>
+                      <span>{source.language}</span>
+                      {source.isOfficial && <span className="inline-flex items-center gap-1 text-emerald-400"><ShieldCheck className="h-3 w-3" /> Official</span>}
+                    </div>
+                  </a>
+                ))}
+              </div>
             </div>
           </div>
         </div>
