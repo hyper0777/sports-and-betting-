@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Menu, X, Search, TrendingUp } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Menu, X, Search, TrendingUp, User } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '@/context/AuthContext';
 
 interface HeaderProps {
   selectedSport: string;
@@ -9,6 +10,8 @@ interface HeaderProps {
 }
 
 export default function Header({ selectedSport, onSportChange, onSearch }: HeaderProps) {
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -74,13 +77,29 @@ export default function Header({ selectedSport, onSportChange, onSearch }: Heade
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-4">
-            <Link
-              to="/betting"
-              className="flex items-center gap-2 text-gray-300 hover:text-orange-400 transition font-medium"
-            >
-              <TrendingUp className="h-4 w-4" />
-              Betting
-            </Link>
+            {user ? (
+              <>
+                <Link
+                  to="/betting"
+                  className="flex items-center gap-2 text-gray-300 hover:text-orange-400 transition font-medium"
+                >
+                  <TrendingUp className="h-4 w-4" />
+                  Betting
+                </Link>
+                <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-gray-800">
+                  <User className="h-4 w-4 text-orange-400" />
+                  <span className="text-gray-300 text-sm">{user.email?.split('@')[0]}</span>
+                </div>
+              </>
+            ) : (
+              <button
+                onClick={() => navigate('/auth')}
+                className="flex items-center gap-2 text-gray-300 hover:text-orange-400 transition font-medium"
+              >
+                <User className="h-4 w-4" />
+                Login
+              </button>
+            )}
             <button className="text-gray-300 hover:text-white transition">Login</button>
             <button className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg transition">
               Sign Up
@@ -149,18 +168,42 @@ export default function Header({ selectedSport, onSportChange, onSearch }: Heade
 
           {/* Mobile Auth Buttons */}
           <div className="border-t border-gray-700 p-4 space-y-2">
-            <Link
-              to="/betting"
-              onClick={() => setIsMenuOpen(false)}
-              className="flex items-center justify-center gap-2 w-full text-gray-300 hover:text-orange-400 py-2 transition font-medium"
-            >
-              <TrendingUp className="h-4 w-4" />
-              Betting Dashboard
-            </Link>
-            <button className="w-full text-gray-300 hover:text-white py-2 transition">Login</button>
-            <button className="w-full bg-orange-500 hover:bg-orange-600 text-white py-2 rounded-lg transition">
-              Sign Up
-            </button>
+            {user ? (
+              <>
+                <Link
+                  to="/betting"
+                  onClick={() => setIsMenuOpen(false)}
+                  className="flex items-center justify-center gap-2 w-full text-gray-300 hover:text-orange-400 py-2 transition font-medium"
+                >
+                  <TrendingUp className="h-4 w-4" />
+                  Betting Dashboard
+                </Link>
+                <div className="px-4 py-2 text-gray-400 text-sm text-center border-t border-gray-600 mt-2">
+                  {user.email}
+                </div>
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={() => {
+                    navigate('/auth');
+                    setIsMenuOpen(false);
+                  }}
+                  className="w-full text-gray-300 hover:text-orange-400 py-2 transition font-medium"
+                >
+                  Login
+                </button>
+                <button
+                  onClick={() => {
+                    navigate('/auth');
+                    setIsMenuOpen(false);
+                  }}
+                  className="w-full bg-orange-500 hover:bg-orange-600 text-white py-2 rounded-lg transition"
+                >
+                  Sign Up
+                </button>
+              </>
+            )}
           </div>
         </div>
       )}

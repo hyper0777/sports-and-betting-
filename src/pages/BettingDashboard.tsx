@@ -1,8 +1,12 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useBetting } from '@/context/BettingContext';
-import { TrendingUp, TrendingDown, Target, DollarSign, Percent } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
+import { TrendingUp, TrendingDown, Target, DollarSign, Percent, LogOut, Loader } from 'lucide-react';
 
 export default function BettingDashboard() {
+  const navigate = useNavigate();
+  const { user, signOut } = useAuth();
   const {
     bankroll,
     balance,
@@ -13,7 +17,17 @@ export default function BettingDashboard() {
     getWinRate,
     getTotalBets,
     getWinCount,
+    loading: bettingLoading,
   } = useBetting();
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      navigate('/auth');
+    } catch (error) {
+      alert('Error signing out');
+    }
+  };
 
   const [newBankroll, setNewBankroll] = useState('');
   const [showBankrollForm, setShowBankrollForm] = useState(bankroll === 0);
@@ -51,13 +65,37 @@ export default function BettingDashboard() {
   const pendingBets = bets.filter((b) => b.result === 'pending');
   const settledBets = bets.filter((b) => b.result !== 'pending').slice().reverse();
 
+  if (bettingLoading) {
+    return (
+      <div className="min-h-screen bg-gray-950 text-white flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <Loader className="w-8 h-8 animate-spin text-orange-500" />
+          <p>Loading your betting data...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-950 text-white p-6">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2">Betting Dashboard</h1>
-          <p className="text-gray-400">Track your bets, manage your bankroll, and analyze your performance</p>
+        {/* Header with User Info */}
+        <div className="flex items-start justify-between mb-8">
+          <div>
+            <h1 className="text-4xl font-bold mb-2">Betting Dashboard</h1>
+            <p className="text-gray-400">Track your bets, manage your bankroll, and analyze your performance</p>
+          </div>
+          <div className="text-right">
+            <p className="text-gray-400 text-sm mb-2">Logged in as:</p>
+            <p className="text-white font-semibold mb-4">{user?.email}</p>
+            <button
+              onClick={handleSignOut}
+              className="flex items-center gap-2 bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white px-4 py-2 rounded-lg transition"
+            >
+              <LogOut className="w-4 h-4" />
+              Sign Out
+            </button>
+          </div>
         </div>
 
         {/* Bankroll Section */}
