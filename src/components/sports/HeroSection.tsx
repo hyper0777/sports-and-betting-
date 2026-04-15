@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, Play } from 'lucide-react';
 import { Match } from '@/data/sportsData';
+import { useOdds } from '@/hooks/use-odds';
 
 interface HeroSectionProps {
   matches: Match[];
@@ -10,6 +11,7 @@ interface HeroSectionProps {
 export default function HeroSection({ matches, onWatchClick }: HeroSectionProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [autoplay, setAutoplay] = useState(true);
+  const { odds: liveOdds } = useOdds(matches);
 
   const liveMatches = matches.filter((m) => m.status === 'live');
   const displayMatches = liveMatches.length > 0 ? liveMatches : matches.slice(0, 3);
@@ -93,10 +95,16 @@ export default function HeroSection({ matches, onWatchClick }: HeroSectionProps)
               {/* Match Details */}
               <div className="flex items-center justify-center gap-4 text-gray-300 text-sm">
                 <span>📍 {currentMatch.venue}</span>
-                {currentMatch.odds && <span>•</span>}
-                {currentMatch.odds && (
+                {(liveOdds[currentMatch.id] || currentMatch.odds) && <span>•</span>}
+                {(liveOdds[currentMatch.id] || currentMatch.odds) && (
                   <span className="text-orange-400">
-                    Odds: {currentMatch.odds.home}W - {currentMatch.odds.draw}D - {currentMatch.odds.away}A
+                    {(() => {
+                      const odds = liveOdds[currentMatch.id] || currentMatch.odds;
+                      if (!odds) return null;
+                      return odds.draw > 0
+                        ? `Odds: ${odds.home.toFixed(2)}W - ${odds.draw.toFixed(2)}D - ${odds.away.toFixed(2)}A`
+                        : `Odds: ${odds.home.toFixed(2)}W - ${odds.away.toFixed(2)}A`;
+                    })()}
                   </span>
                 )}
               </div>
