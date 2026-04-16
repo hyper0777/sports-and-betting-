@@ -39,14 +39,17 @@ export function BettingProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(false);
 
   const supabaseConfig = getSupabaseClientConfig();
-  const supabase = createClient(supabaseConfig.supabaseUrl, supabaseConfig.supabaseAnonKey);
+  const supabase = supabaseConfig
+    ? createClient(supabaseConfig.supabaseUrl, supabaseConfig.supabaseAnonKey)
+    : null;
 
   // Load bankroll and bets when user logs in
   useEffect(() => {
-    if (!user) {
+    if (!user || !supabase) {
       setBankrollState(0);
       setBalance(0);
       setBets([]);
+      setLoading(false);
       return;
     }
 
@@ -94,19 +97,22 @@ export function BettingProvider({ children }: { children: ReactNode }) {
     };
 
     loadUserData();
-  }, [user]);
+  }, [user, supabase]);
 
   const setBankroll = useCallback(
     async (amount: number) => {
-      if (!user) throw new Error('User not authenticated');
       if (amount <= 0) throw new Error('Bankroll must be greater than 0');
 
       try {
-        await supabase.from('bankroll').upsert({
-          user_id: user.id,
-          initial_amount: amount,
-          current_balance: amount,
-        });
+        if (supabase && user) {
+          await supabase.from('bankroll').upsert({
+            user_id: user.id,
+            initial_amount: amount,
+            current_balance: amount,
+          });
+        } else {
+          console.warn('Supabase not configured. Using local session only.');
+        }
 
         setBankrollState(amount);
         setBalance(amount);
@@ -115,55 +121,73 @@ export function BettingProvider({ children }: { children: ReactNode }) {
         throw new Error(error instanceof Error ? error.message : 'Error setting bankroll');
       }
     },
-    [user]
+    [user, supabase]
   );
 
   const addBet = useCallback(
     async (matchId: string, matchName: string, stake: number, odds: number, bettingOn: string) => {
-      if (!user) throw new Error('User not authenticated');
       if (stake <= 0 || odds <= 0) throw new Error('Stake and odds must be greater than 0');
       if (stake > balance) throw new Error('Insufficient balance');
 
       try {
-        const { data: newBet, error } = await supabase
-          .from('bets')
-          .insert({
-            user_id: user.id,
-            match_id: matchId,
-            match_name: matchName,
+        const newBalance = balance - stake;
+
+        if (supabase && user) {
+          const { data: newBet, error } = await supabase
+            .from('bets')
+            .insert({
+              user_id: user.id,
+              match_id: matchId,
+              match_name: matchName,
+              stake,
+              odds,
+              result: 'pending',
+              profit: 0,
+              betting_on: bettingOn,
+            })
+            .select()
+            .single();
+
+          if (error) throw error;
+
+          // Update local balance
+          setBalance(newBalance);
+
+          // Update bankroll in database
+          await supabase
+            .from('bankroll')
+            .update({ current_balance: newBalance })
+            .eq('user_id', user.id);
+
+          // Add to bets list
+          if (newBet) {
+            const bet: Bet = {
+              id: newBet.id,
+              matchId: newBet.match_id,
+              matchName: newBet.match_name,
+              stake: newBet.stake,
+              odds: newBet.odds,
+              result: newBet.result,
+              profit: newBet.profit,
+              createdAt: newBet.created_at,
+              bettingOn: newBet.betting_on,
+            };
+            setBets((prev) => [bet, ...prev]);
+          }
+        } else {
+          // Local fallback - no persistence
+          console.warn('Supabase not configured. Bet saved locally only (will not persist).');
+          setBalance(newBalance);
+          const bet: Bet = {
+            id: `bet_${Date.now()}`,
+            matchId,
+            matchName,
             stake,
             odds,
             result: 'pending',
             profit: 0,
-            betting_on: bettingOn,
-          })
-          .select()
-          .single();
-
-        if (error) throw error;
-
-        // Update local balance
-        const newBalance = balance - stake;
-        setBalance(newBalance);
-
-        // Update bankroll in database
-        await supabase
-          .from('bankroll')
-          .update({ current_balance: newBalance })
-          .eq('user_id', user.id);
-
-        // Add to bets list
-        if (newBet) {
-          const bet: Bet = {
-            id: newBet.id,
-            matchId: newBet.match_id,
-            matchName: newBet.match_name,
-            stake: newBet.stake,
-            odds: newBet.odds,
-            result: newBet.result,
-            profit: newBet.profit,
-            createdAt: newBet.created_at,
-            bettingOn: newBet.betting_on,
+            createdAt: new Date().toISOString(),
+            bettingOn,
           };
           setBets((prev) => [bet, ...prev]);
         }
@@ -171,13 +195,11 @@ export function BettingProvider({ children }: { children: ReactNode }) {
         throw new Error(error instanceof Error ? error.message : 'Error adding bet');
       }
     },
-    [user, balance]
+    [user, balance, supabase]
   );
 
   const settleBet = useCallback(
     async (betId: string, result: 'win' | 'loss') => {
-      if (!user) throw new Error('User not authenticated');
-
       try {
         const bet = bets.find((b) => b.id === betId);
         if (!bet || bet.result !== 'pending') throw new Error('Invalid bet');
@@ -189,21 +211,26 @@ export function BettingProvider({ children }: { children: ReactNode }) {
           profit = -bet.stake;
         }
 
-        // Update bet in database
-        await supabase
-          .from('bets')
-          .update({ result, profit, settled_at: new Date().toISOString() })
-          .eq('id', betId);
-
-        // Update balance
+        // Update balance locally
         const newBalance = balance + profit;
-        setBalance(newBalance);
 
-        // Update bankroll in database
-        await supabase
-          .from('bankroll')
-          .update({ current_balance: newBalance })
-          .eq('user_id', user.id);
+        if (supabase && user) {
+          // Update bet in database
+          await supabase
+            .from('bets')
+            .update({ result, profit, settled_at: new Date().toISOString() })
+            .eq('id', betId);
+
+          // Update bankroll in database
+          await supabase
+            .from('bankroll')
+            .update({ current_balance: newBalance })
+            .eq('user_id', user.id);
+        } else {
+          console.warn('Supabase not configured. Bet settled locally only (will not persist).');
+        }
+
+        setBalance(newBalance);
 
         // Update local bets
         setBets((prev) =>
@@ -217,7 +244,7 @@ export function BettingProvider({ children }: { children: ReactNode }) {
         throw new Error(error instanceof Error ? error.message : 'Error settling bet');
       }
     },
-    [user, balance, bets]
+    [user, balance, bets, supabase]
   );
 
   const getTotalProfit = useCallback(() => {
