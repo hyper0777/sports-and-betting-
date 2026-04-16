@@ -1,0 +1,20 @@
+# Allow all search engines
+User-agent: *
+Allow: /
+Disallow: /auth
+Disallow: /betting (Allow crawlers but not indexing)
+
+# Sitemap location
+Sitemap: https://scorehub.example.com/sitemap.xml
+
+# Crawl delay (optional)
+Crawl-delay: 1
+
+# Specific rules for major search engines
+User-agent: Googlebot
+Allow: /
+Crawl-delay: 0
+
+User-agent: Bingbot
+Allow: /
+Crawl-delay: 1
