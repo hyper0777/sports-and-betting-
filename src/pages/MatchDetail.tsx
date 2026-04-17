@@ -2,14 +2,12 @@ import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft, PlayCircle, Radio, ShieldCheck, TrendingUp } from 'lucide-react';
 import { liveMatches } from '@/data/sportsData';
 import { useScoreSimulator } from '@/components/sports/useScoreSimulator';
-import { useMatchPrediction } from '@/hooks/use-predictions';
 import QuickBet from '@/components/betting/QuickBet';
 
 export default function MatchDetail() {
   const { matchId } = useParams();
   const scoreState = useScoreSimulator(liveMatches);
   const match = scoreState.matches.find((m) => m.id === matchId);
-  const { prediction: apiPrediction, loading: predLoading } = useMatchPrediction(matchId || null);
 
   if (!match) {
     return (
@@ -69,16 +67,16 @@ export default function MatchDetail() {
                 </div>
               </div>
 
-              {(apiPrediction || match.prediction) && (
+              {match.prediction && (
                 <div className="rounded-lg border border-orange-500/30 bg-orange-500/10 p-4">
-                  <p className="text-sm text-orange-300">AI Prediction {predLoading && '(Loading...)'}</p>
+                  <p className="text-sm text-orange-300">AI Prediction</p>
                   <p className="text-xl font-semibold mt-1">
-                    {(apiPrediction || match.prediction)?.recommendation.toUpperCase()} ({(apiPrediction || match.prediction)?.confidence.toUpperCase()} confidence)
+                    {match.prediction.recommendation.toUpperCase()} ({match.prediction.confidence.toUpperCase()} confidence)
                   </p>
                   <div className="mt-3 grid grid-cols-3 gap-2 text-sm">
-                    <p>H: <span className="font-semibold">{(apiPrediction || match.prediction)?.homeWin}%</span></p>
-                    <p>D: <span className="font-semibold">{(apiPrediction || match.prediction)?.draw}%</span></p>
-                    <p>A: <span className="font-semibold">{(apiPrediction || match.prediction)?.awayWin}%</span></p>
+                    <p>H: <span className="font-semibold">{match.prediction.homeWin}%</span></p>
+                    <p>D: <span className="font-semibold">{match.prediction.draw}%</span></p>
+                    <p>A: <span className="font-semibold">{match.prediction.awayWin}%</span></p>
                   </div>
                   <p className="mt-2 text-sm text-emerald-300 inline-flex items-center gap-1">
                     <TrendingUp className="h-4 w-4" /> Positive expected value detected
