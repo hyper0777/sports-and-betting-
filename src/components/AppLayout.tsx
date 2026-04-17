@@ -20,6 +20,7 @@ import Footer from './sports/Footer';
 import BackToTop from './sports/BackToTop';
 import { useScoreSimulator } from './sports/useScoreSimulator';
 import BettingInsights from './sports/BettingInsights';
+import DailyPredictions from './predictions/DailyPredictions';
 
 export default function AppLayout() {
   const [selectedSport, setSelectedSport] = useState('all');
@@ -124,6 +125,10 @@ export default function AppLayout() {
 
         <section className="mb-12">
           <BettingInsights matches={filteredMatches} onOpenMatch={(matchId) => navigate(`/match/${matchId}`)} />
+        </section>
+
+        <section className="mb-12">
+          <DailyPredictions />
         </section>
 
         <section className="mb-12">
