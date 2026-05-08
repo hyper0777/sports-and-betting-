@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Bell, MapPin, Clock, TrendingUp } from 'lucide-react';
+import { Bell, MapPin, Clock } from 'lucide-react';
 import { Match } from '@/data/sportsData';
 
 interface UpcomingMatchesProps {

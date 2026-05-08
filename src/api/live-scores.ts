@@ -16,7 +16,12 @@ interface EdgeFunctionResponse {
 
 export async function fetchLiveScores() {
   try {
-    const { supabaseUrl, supabaseAnonKey } = getSupabaseClientConfig();
+    const config = getSupabaseClientConfig();
+    if (!config) {
+      throw new Error('Supabase not configured');
+    }
+
+    const { supabaseUrl, supabaseAnonKey } = config;
 
     const response = await fetch(
       `${supabaseUrl}/functions/v1/live-scores`,

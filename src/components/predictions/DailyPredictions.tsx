@@ -118,16 +118,17 @@ export default function DailyPredictions() {
 }
 
 function PredictionCard({ prediction }: { prediction: DailyPrediction }) {
-  const { prediction: pred, confidence } = prediction;
+  const { prediction: pred } = prediction;
+  const confidence = pred.confidence;
   const bestOdds = Math.max(pred.homeWin, pred.draw, pred.awayWin);
 
-  const confidenceColor = {
+  const confidenceColor: Record<string, string> = {
     high: 'bg-green-500/20 text-green-400 border-green-500/30',
     medium: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
     low: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
   };
 
-  const recommendationColor = {
+  const recommendationColor: Record<string, string> = {
     home: 'text-purple-400',
     draw: 'text-blue-400',
     away: 'text-pink-400',

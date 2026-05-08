@@ -151,7 +151,7 @@ export default function LiveScores({ matches, onMatchClick }: LiveScoresProps) {
               key={match.id}
               match={match}
               onCardClick={onMatchClick}
-              onFavoriteToggle={(matchId) => {
+              onFavoriteToggle={() => {
                 // Handle favorite toggle
                 match.isFavorite = !match.isFavorite;
               }}

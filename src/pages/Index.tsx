@@ -5,7 +5,7 @@ import StandingsTable from '@/components/StandingsTable';
 import NewsCard from '@/components/NewsCard';
 import PlayerStatsCard from '@/components/PlayerStatsCard';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { mockGames, mockStandings, mockNews, mockPlayers } from '@/data/mockData';

@@ -39,11 +39,13 @@ export function BettingProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(false);
 
   const supabaseConfig = getSupabaseClientConfig();
-  const supabase = createClient(supabaseConfig.supabaseUrl, supabaseConfig.supabaseAnonKey);
+  const supabase = supabaseConfig
+    ? createClient(supabaseConfig.supabaseUrl, supabaseConfig.supabaseAnonKey)
+    : null;
 
   // Load bankroll and bets when user logs in
   useEffect(() => {
-    if (!user) {
+    if (!user || !supabase) {
       setBankrollState(0);
       setBalance(0);
       setBets([]);
@@ -94,11 +96,12 @@ export function BettingProvider({ children }: { children: ReactNode }) {
     };
 
     loadUserData();
-  }, [user]);
+  }, [user, supabase]);
 
   const setBankroll = useCallback(
     async (amount: number) => {
       if (!user) throw new Error('User not authenticated');
+      if (!supabase) throw new Error('Supabase is not configured');
       if (amount <= 0) throw new Error('Bankroll must be greater than 0');
 
       try {
@@ -115,12 +118,13 @@ export function BettingProvider({ children }: { children: ReactNode }) {
         throw new Error(error instanceof Error ? error.message : 'Error setting bankroll');
       }
     },
-    [user]
+    [user, supabase]
   );
 
   const addBet = useCallback(
     async (matchId: string, matchName: string, stake: number, odds: number, bettingOn: string) => {
       if (!user) throw new Error('User not authenticated');
+      if (!supabase) throw new Error('Supabase is not configured');
       if (stake <= 0 || odds <= 0) throw new Error('Stake and odds must be greater than 0');
       if (stake > balance) throw new Error('Insufficient balance');
 
@@ -171,12 +175,13 @@ export function BettingProvider({ children }: { children: ReactNode }) {
         throw new Error(error instanceof Error ? error.message : 'Error adding bet');
       }
     },
-    [user, balance]
+    [user, balance, supabase]
   );
 
   const settleBet = useCallback(
     async (betId: string, result: 'win' | 'loss') => {
       if (!user) throw new Error('User not authenticated');
+      if (!supabase) throw new Error('Supabase is not configured');
 
       try {
         const bet = bets.find((b) => b.id === betId);
@@ -217,7 +222,7 @@ export function BettingProvider({ children }: { children: ReactNode }) {
         throw new Error(error instanceof Error ? error.message : 'Error settling bet');
       }
     },
-    [user, balance, bets]
+    [user, balance, bets, supabase]
   );
 
   const getTotalProfit = useCallback(() => {

@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { Match } from '@/data/sportsData';
-import { getSupabaseClientConfig } from '@/lib/supabaseConfig';
 
 interface ScoreSimulatorState {
   matches: Match[];

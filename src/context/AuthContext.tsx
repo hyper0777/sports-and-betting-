@@ -26,12 +26,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<string | null>(null);
 
   const supabaseConfig = getSupabaseClientConfig();
-  const supabase = createClient(supabaseConfig.supabaseUrl, supabaseConfig.supabaseAnonKey);
+  const supabase = supabaseConfig
+    ? createClient(supabaseConfig.supabaseUrl, supabaseConfig.supabaseAnonKey)
+    : null;
 
   // Check if user is already logged in on mount
   useEffect(() => {
     const checkSession = async () => {
       try {
+        if (!supabase) {
+          setLoading(false);
+          return;
+        }
         const { data } = await supabase.auth.getSession();
         if (data.session?.user) {
           setUser({
@@ -49,8 +55,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     checkSession();
 
+    if (!supabase) return;
+
     // Listen for auth state changes
-    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
         setUser({
           id: session.user.id,
@@ -65,10 +73,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       authListener?.subscription.unsubscribe();
     };
-  }, []);
+  }, [supabase]);
 
   const signUp = async (email: string, password: string) => {
     setError(null);
+    if (!supabase) {
+      const message = 'Supabase is not configured';
+      setError(message);
+      throw new Error(message);
+    }
     try {
       const { error: signUpError } = await supabase.auth.signUp({
         email,
@@ -87,6 +100,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signIn = async (email: string, password: string) => {
     setError(null);
+    if (!supabase) {
+      const message = 'Supabase is not configured';
+      setError(message);
+      throw new Error(message);
+    }
     try {
       const { error: signInError } = await supabase.auth.signInWithPassword({
         email,
@@ -105,6 +123,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = async () => {
     setError(null);
+    if (!supabase) {
+      const message = 'Supabase is not configured';
+      setError(message);
+      throw new Error(message);
+    }
     try {
       const { error: signOutError } = await supabase.auth.signOut();
       if (signOutError) {
