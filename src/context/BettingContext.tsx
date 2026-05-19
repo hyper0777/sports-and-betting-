@@ -58,7 +58,7 @@ export function BettingProvider({ children }: { children: ReactNode }) {
           .from('bankroll')
           .select('*')
           .eq('user_id', user.id)
-          .single();
+          .maybeSingle();
 
         if (bankrollData) {
           setBankrollState(bankrollData.initial_amount);
